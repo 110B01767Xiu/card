@@ -1,0 +1,92 @@
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.gridlayout.widget.GridLayout;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageView;
+
+import java.util.ArrayList;
+import java.util.Collections;
+
+public class MainActivity extends AppCompatActivity {
+
+    private static final int NUM_IMAGES = 6;
+    private ArrayList<Integer> imageIds;
+    private int firstCard;
+    private int secondCard;
+    private int cardsLeft;
+    private boolean isLocked;
+    private ImageView[] imageViews;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        GridLayout gridLayout = findViewById(R.id.gridLayout);
+        gridLayout.setColumnCount(3);
+
+        imageViews = new ImageView[NUM_IMAGES * 2];
+        imageIds = new ArrayList<>();
+        for (int i = 0; i < NUM_IMAGES; i++) {
+            imageIds.add(getResources().getIdentifier("image" + i, "drawable", getPackageName()));
+            imageIds.add(getResources().getIdentifier("image" + i, "drawable", getPackageName()));
+        }
+        Collections.shuffle(imageIds);
+
+        for (int i = 0; i < NUM_IMAGES * 2; i++) {
+            ImageView imageView = new ImageView(this);
+            imageView.setImageResource(R.drawable.card_back);
+            imageView.setTag(i);
+            imageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (!isLocked) {
+                        int position = (int) v.getTag();
+                        int imageId = imageIds.get(position);
+                        ImageView imageView = (ImageView) v;
+                        imageView.setImageResource(imageId);
+
+                        if (firstCard == -1) {
+                            firstCard = position;
+                        } else {
+                            secondCard = position;
+                            checkMatch();
+                        }
+                    }
+                }
+            });
+            imageViews[i] = imageView;
+            gridLayout.addView(imageView);
+        }
+
+        firstCard = -1;
+        secondCard = -1;
+        cardsLeft = NUM_IMAGES;
+        isLocked = false;
+    }
+
+    private void checkMatch() {
+        isLocked = true;
+        if (imageIds.get(firstCard).equals(imageIds.get(secondCard))) {
+            imageViews[firstCard].setVisibility(View.INVISIBLE);
+            imageViews[secondCard].setVisibility(View.INVISIBLE);
+            cardsLeft--;
+            if (cardsLeft == 0) {
+                // Game over, do something here
+            }
+        } else {
+            new android.os.Handler().postDelayed(
+                    new Runnable() {
+                        public void run() {
+                            imageViews[firstCard].setImageResource(R.drawable.card_back);
+                            imageViews[secondCard].setImageResource(R.drawable.card_back);
+                            isLocked = false;
+                        }
+                    },
+                    1000);
+        }
+        firstCard = -1;
+        secondCard = -1;
+    }
+}
